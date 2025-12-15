@@ -7,7 +7,8 @@ import SettingsPage from "@/pages/Settings";
 import PartnersPage from "@/pages/landings/partnersPage.vue";
 import linearDiagram from "@/pages/DiagramPages/linearDiagram.vue";
 import circleDiagram from "@/pages/DiagramPages/circleDiagram.vue";
-import tablePreview from "@/pages/StepsPages/tablePreview.vue";
+// import tablePreview from "@/pages/StepsPages/tablePreview.vue";
+import problematicRows from "@/pages/StepsPages/problematicRows.vue";
 
 import { createRouter, createWebHashHistory } from "vue-router";
 
@@ -35,10 +36,15 @@ const routes = [
         component: linearDiagram,
         name: "gistogram",
     },
+    // {
+    //     path: "/newReport/tablePreview/",
+    //     component: tablePreview,
+    //     name: "tablePreview",
+    // },
     {
-        path: "/newReport/tablePreview/",
-        component: tablePreview,
-        name: "tablePreview",
+        path: "/newReport/problematicRows/",
+        component: problematicRows,
+        name: "problematicRows",
     },
     {
         path: "/myReports",

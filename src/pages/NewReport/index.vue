@@ -61,7 +61,8 @@
                 </div>
             </div>
         </div>
-        <data-preview-table v-if="step === 2" />
+        <!-- <data-preview-table v-if="step === 2" /> -->
+        <data-preview-with-tabs v-if="step === 2" />
         <column-types v-if="step === 3" />
         <data-quality-report v-if="step === 4" @back="step = 3" />
 
@@ -70,87 +71,10 @@
                 <Icon icon="mdi-chevron-left" class="arrow-icon" /> Назад
             </button>
             <button @click="step = step + 1" class="btn-next-large">
-                Налаштувати типи даних
+                {{ getNextStepButtonName }}
                 <Icon icon="mdi-chevron-right" class="arrow-icon" />
             </button>
         </div>
-        <!-- <div class="preview_table" v-if="fileLoaded">
-            <h2>Попередній перегляд даних</h2>
-
-            <table v-if="normalizedTable.length">
-                <thead>
-                    <tr>
-                        <th v-for="col in normalizedTable[0]" :key="col">
-                            {{ col }}
-                        </th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    <tr
-                        v-for="(row, rowIndex) in normalizedTable.slice(1)"
-                        :key="rowIndex"
-                    >
-                        <td v-for="(cell, colIndex) in row" :key="colIndex">
-                            {{ cell }}
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div> -->
-        <!-- <div class="step_two" v-if="fileLoaded">
-            <div class="header">
-                <h1>Оберіть тип графіку для відображення</h1>
-            </div>
-            <div class="graphics_container">
-                <h1>Типи графіків</h1>
-                <div class="graphics_container_wrapper">
-                    <div class="row" @click="selectDiagramType('gistogram')">
-                        <div class="graphic">
-                            <div class="img_container">
-                                <img
-                                    src="../../assets/images/gistogram.png"
-                                    alt=""
-                                />
-                            </div>
-                            <p>Гістограма</p>
-                        </div>
-                    </div>
-                    <div
-                        class="row"
-                        @click="selectDiagramType('circleDiagram')"
-                    >
-                        <div class="graphic">
-                            <div class="img_container">
-                                <img
-                                    style="width: 295px"
-                                    src="../../assets/images/circle_diagram.png"
-                                    alt=""
-                                />
-                            </div>
-
-                            <p>Кругова діаграма</p>
-                        </div>
-                    </div>
-                    <div
-                        class="row"
-                        @click="selectDiagramType('linearDiagram')"
-                    >
-                        <div class="graphic">
-                            <div class="img_container">
-                                <img
-                                    style="width: 295px"
-                                    src="../../assets/images/linear_gistogram.png"
-                                    alt=""
-                                />
-                            </div>
-
-                            <p>Лінійна діаграма</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div> -->
     </div>
 </template>
 
@@ -159,10 +83,11 @@ import { Icon } from "@iconify/vue";
 import { FILE_TYPES } from "@/constants/commonConstants";
 import * as XLSX from "xlsx";
 import Papa from "papaparse";
-import { mapActions } from "vuex";
+import { mapActions, mapGetters } from "vuex";
 import ApiResponsePopup from "@/components/common/apiResponsePopup.vue";
-import DataPreviewTable from "@/pages/StepsPages/tablePreview.vue";
+// import DataPreviewTable from "@/pages/StepsPages/tablePreview.vue";
 import ColumnTypes from "@/pages/StepsPages/columnTypes.vue";
+import DataPreviewWithTabs from "@/pages/StepsPages/dataPreviewWithTabsV2.vue";
 import DataQualityReport from "@/pages/StepsPages/dataQualityReport.vue";
 
 export default {
@@ -170,8 +95,9 @@ export default {
     components: {
         Icon,
         ApiResponsePopup,
-        DataPreviewTable,
+        // DataPreviewTable,
         ColumnTypes,
+        DataPreviewWithTabs,
         DataQualityReport,
     },
     data() {
@@ -182,20 +108,19 @@ export default {
         };
     },
     computed: {
+        ...mapGetters("charts", ["getChartData", "getFileType"]),
         normalizedTable() {
             const data = this.$store.state.charts.chartData;
             const fileType = this.$store.state.charts.fileType;
 
             if (!data) return [];
 
-            // Excel: несколько листов → берём первый
             if (fileType === FILE_TYPES.FILE_TYPE_XLSX) {
                 const sheetNames = Object.keys(data);
                 const sheet = data[sheetNames[0]];
-                return sheet; // тут уже массив массивов
+                return sheet;
             }
 
-            // JSON: ожидаем массив объектов
             if (fileType === FILE_TYPES.FILE_TYPE_JSON) {
                 if (!Array.isArray(data) || !data.length) return [];
 
@@ -205,7 +130,6 @@ export default {
                 return [headers, ...rows];
             }
 
-            // CSV: у тебя headers + data[]
             if (fileType === FILE_TYPES.FILE_TYPE_CSV) {
                 const headers = data.headers;
                 const rows = data.data.map((obj) => headers.map((h) => obj[h]));
@@ -214,11 +138,27 @@ export default {
 
             return [];
         },
+        getNextStepButtonName() {
+            if (this.step === 2) {
+                return "Налаштувати типи даних та задати валідацію";
+            }
+            if (this.step === 3) {
+                return "Звіт якості даних";
+            }
+            return "";
+        },
     },
 
     methods: {
-        ...mapActions("charts", ["setChartDataAction", "setFileTypeAction"]),
+        ...mapActions("charts", [
+            "setChartDataAction",
+            "setFileTypeAction",
+            "resetChartData",
+        ]),
         prevStep() {
+            if (this.$route.query && this.$route.query.chartType) {
+                this.$router.replace({ query: {} });
+            }
             if (this.step === 2) {
                 this.fileLoaded = false;
             }
@@ -227,7 +167,44 @@ export default {
         openFileDialog() {
             this.$refs.fileInput.click();
         },
+        cleanCell(value) {
+            if (value === null || value === undefined) return "";
+            const str = String(value).trim();
+            const trash = [
+                "NULL",
+                "null",
+                "Null",
+                "\\N",
+                "N/A",
+                "n/a",
+                "NA",
+                "na",
+                "-",
+                "—",
+                "–",
+                "",
+                " ",
+                "undefined",
+                "None",
+                "NaN",
+            ];
+            return trash.includes(str) ? "" : str;
+        },
+
+        cleanTable(table) {
+            return table.map((row) =>
+                Array.isArray(row)
+                    ? row.map((cell) => this.cleanCell(cell))
+                    : Object.fromEntries(
+                          Object.entries(row).map(([key, val]) => [
+                              key,
+                              this.cleanCell(val),
+                          ])
+                      )
+            );
+        },
         handleFileChange(event) {
+            this.resetChartData();
             this.fileLoadError = false;
             const file = event.target.files[0];
             const fileType = file.name.split(".").pop().toLowerCase();
@@ -247,77 +224,97 @@ export default {
                 }
             }
         },
+        // === JSON ===
         readJsonFile(file) {
             const reader = new FileReader();
-            reader.onload = (event) => {
+            reader.onload = (e) => {
                 try {
-                    const chartData = JSON.parse(event.target.result);
-                    this.setFileTypeAction(FILE_TYPES.FILE_TYPE_JSON);
-                    this.setChartDataAction(chartData);
+                    let data = JSON.parse(e.target.result);
+                    // if (Array.isArray(data)) {
+                    //     data = this.cleanTable(data); // чистим
+                    // }
+                    this.setFileTypeAction("json");
+                    this.setChartDataAction(data);
                     this.fileLoaded = true;
                     this.successLoad();
-                } catch (error) {
-                    console.error("Error parsing JSON:", error);
+                } catch (err) {
+                    console.error(err);
                     this.fileLoadError = true;
                 }
             };
             reader.readAsText(file);
         },
+
         readExcelFile(file) {
             const reader = new FileReader();
-            reader.onload = (event) => {
+            reader.onload = (e) => {
                 try {
-                    const data = new Uint8Array(event.target.result);
+                    const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: "array" });
-                    const excelDataToJson = {};
+                    const result = {};
+
                     for (const sheetName in workbook.Sheets) {
-                        // eslint-disable-next-line
+                        // eslint-disable-next-line no-prototype-builtins
                         if (workbook.Sheets.hasOwnProperty(sheetName)) {
-                            const sheetData = XLSX.utils.sheet_to_json(
+                            let sheetData = XLSX.utils.sheet_to_json(
                                 workbook.Sheets[sheetName],
                                 {
                                     header: 1,
-                                    raw: false,
+                                    defval: "",
                                 }
                             );
-                            excelDataToJson[sheetName] = sheetData;
+                            // sheetData = this.cleanTable(sheetData);
+                            result[sheetName] = sheetData;
                         }
                     }
-                    this.setFileTypeAction(FILE_TYPES.FILE_TYPE_XLSX);
-                    this.setChartDataAction(excelDataToJson);
+
+                    this.setFileTypeAction("xlsx");
+                    this.setChartDataAction(result);
                     this.fileLoaded = true;
                     this.successLoad();
-                } catch (error) {
-                    console.error("Error parsing Excel:", error);
+                } catch (err) {
+                    console.error(err);
                     this.fileLoadError = true;
                 }
             };
             reader.readAsArrayBuffer(file);
         },
+
+        // === CSV ===
         readCsvFile(file) {
             const reader = new FileReader();
-            reader.onload = (event) => {
+            reader.onload = (e) => {
                 try {
-                    const csvData = Papa.parse(event.target.result, {
+                    const csv = Papa.parse(e.target.result, {
                         header: true,
-                        dynamicTyping: true,
+                        dynamicTyping: false,
+                        skipEmptyLines: true,
                     });
-                    this.setFileTypeAction(FILE_TYPES.FILE_TYPE_CSV);
-                    const aggrCsvData = {
-                        headers: csvData.meta.fields,
-                        data: csvData.data,
-                    };
-                    aggrCsvData.data.pop();
-                    this.setChartDataAction(aggrCsvData);
+
+                    const headers = csv.meta.fields;
+                    let rows = csv.data;
+
+                    rows = rows.map((row) =>
+                        Object.fromEntries(
+                            Object.entries(row).map(([key, val]) => [
+                                key,
+                                this.cleanCell(val),
+                            ])
+                        )
+                    );
+
+                    const cleanData = { headers, data: rows };
+
+                    this.setFileTypeAction("csv");
+                    this.setChartDataAction(cleanData);
                     this.fileLoaded = true;
                     this.successLoad();
-                    this.successLoad();
-                } catch (error) {
-                    console.error("Error parsing CSV:", error);
+                } catch (err) {
+                    console.error(err);
                     this.fileLoadError = true;
                 }
             };
-            reader.readAsText(file);
+            reader.readAsText(file, "UTF-8");
         },
         selectDiagramType(diagramType = "") {
             if (diagramType && diagramType.length) {
@@ -328,6 +325,12 @@ export default {
             this.step = 2;
         },
     },
+    mounted() {
+        if (this.getFileType && this.getFileType.length) {
+            this.fileLoaded = true;
+            this.step = 2;
+        }
+    },
 };
 </script>
 
@@ -337,6 +340,7 @@ export default {
 }
 .wrapper {
     margin-top: 50px;
+    padding-bottom: 100px;
     display: flex;
     justify-content: space-evenly;
 }
@@ -496,7 +500,7 @@ export default {
     z-index: 10;
     border-radius: 0 0 16px 16px;
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
-    // padding: 30px 20px 60px; // отступ снизу, чтобы не перекрывался фиксированным баром
+    // padding: 30px 20px 60px;
 }
 
 .btn-back {
@@ -543,7 +547,7 @@ export default {
     transition: all 0.3s ease;
 
     .arrow-icon {
-        font-size: 32px; /* большая жирная стрелка */
+        font-size: 32px;
         font-weight: bold;
         transition: transform 0.3s ease;
     }
@@ -554,9 +558,7 @@ export default {
         background: linear-gradient(135deg, #059669, #047857);
 
         .arrow-icon {
-            transform: translateX(
-                6px
-            ); /* стрелка слегка едет вправо при ховере */
+            transform: translateX(6px);
         }
     }
 

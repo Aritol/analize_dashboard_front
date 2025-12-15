@@ -1,6 +1,6 @@
 <template>
     <div class="column-settings">
-        <h2>Налаштування колонок</h2>
+        <h2>Типізація та валідація даних</h2>
         <p class="subtitle">Натисніть на тип даних, щоб змінити</p>
 
         <div class="columns-list">
@@ -27,13 +27,6 @@
                         class="selected-option"
                         @click="toggleDropdown(header)"
                     >
-                        <!-- <Icon
-                            :icon="
-                                types[columnTypes[header]]?.icon ||
-                                'mdi-help-circle-outline'
-                            "
-                            class="type-icon"
-                        /> -->
                         <span>{{
                             types[columnTypes[header]]?.label || ""
                         }}</span>
@@ -87,12 +80,11 @@ export default {
 
     data() {
         return {
-            openDropdown: null, // открытый дропдаун (имя колонки)
+            openDropdown: null,
         };
     },
 
     computed: {
-        // Данные из Vuex
         chartData() {
             return this.$store.state.charts.chartData;
         },
@@ -104,25 +96,16 @@ export default {
                 return this.$store.state.charts.columnTypes || {};
             },
             set(value) {
-                console.log("value");
-                console.log(value);
-
                 this.$store.dispatch("charts/setColumnTypesAction", value);
             },
         },
-
-        // Заголовки колонок
         headers() {
             const table = this.normalizedTable;
             return table.length > 0 ? table[0] : [];
         },
-
-        // Нормализованная таблица
         normalizedTable() {
             return this.getNormalizedTable(this.chartData, this.fileType);
         },
-
-        // Примеры значений
         sampleValues() {
             const table = this.normalizedTable;
             if (table.length < 2) return {};
@@ -137,8 +120,6 @@ export default {
             });
             return result;
         },
-
-        // Все доступные типы
         types() {
             return {
                 number: {
@@ -158,7 +139,7 @@ export default {
                     color: "#f97316",
                 },
                 boolean: {
-                    label: "Так / Ні",
+                    label: "Булевий",
                     icon: "mdi-toggle-switch",
                     color: "#8b5cf6",
                 },
@@ -201,13 +182,11 @@ export default {
             }
             return [];
         },
-
         toggleDropdown(header) {
             console.log("toggleDropdown");
 
             this.openDropdown = this.openDropdown === header ? null : header;
         },
-
         setType(header, type) {
             this.columnTypes = { ...this.columnTypes, [header]: type };
             this.openDropdown = null;
@@ -215,7 +194,6 @@ export default {
     },
 
     mounted() {
-        // Автоопределение типов
         if (Object.keys(this.columnTypes).length === 0 && this.headers.length) {
             const detected = {};
             this.headers.forEach((header) => {
@@ -259,7 +237,6 @@ export default {
             this.columnTypes = detected;
         }
 
-        // Закрытие при клике вне
         // document.addEventListener("click", () => {
         //     console.log("hre");
 
@@ -309,7 +286,7 @@ h2 {
         background: #f8fafc;
     }
     &.ignored {
-        opacity: 0.6;
+        // opacity: 0.6;
         background: #fefbfb;
     }
 }
@@ -341,12 +318,10 @@ h2 {
     border-radius: 16px;
     cursor: pointer;
     min-width: 220px;
-    transition: all 0.2s;
+    transition: all 0.5s;
     &:hover {
-        background: #e2e8f0;
-    }
-    .type-icon {
-        font-size: 20px;
+        background: #89bcff;
+        color: #ffff;
     }
     .arrow {
         margin-left: auto;

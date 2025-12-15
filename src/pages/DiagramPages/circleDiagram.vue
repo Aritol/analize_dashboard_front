@@ -93,12 +93,18 @@
                                     Застосувати
                                 </button>
                                 <button
+                                    class="back_button"
+                                    @click="backToChartTypeSelection"
+                                >
+                                    Повернутись
+                                </button>
+                                <!-- <button
                                     v-if="!$route.params.reportId"
                                     class="save_button"
                                     @click="saveReportPopup = true"
                                 >
                                     Зберегти звіт
-                                </button>
+                                </button> -->
                             </div>
                         </div>
                     </div>
@@ -207,6 +213,9 @@ export default {
         },
     },
     methods: {
+        backToChartTypeSelection() {
+            this.$router.push({ name: "newReportPage" });
+        },
         initializeEntryKeys() {
             const keys = Object.keys(this.chartData);
             for (let i of keys) {
@@ -427,21 +436,15 @@ export default {
             this.initializeEntryKeys();
         }
         const ctx = document.getElementById("myChartExample");
+
         new Chart(ctx, {
-            type: "line",
+            type: "doughnut",
             data: {
-                labels: [
-                    "Понеділок",
-                    "Вівторок",
-                    "Середа",
-                    "Четвер",
-                    "П'ятниця",
-                    "Неділя",
-                ],
+                labels: ["A", "B"],
                 datasets: [
                     {
                         label: "Example",
-                        // data: [12, 19, 3, 5, 2, 3],
+                        data: [12, 19],
                         borderWidth: 1,
                     },
                 ],
@@ -454,7 +457,7 @@ export default {
                     },
                     title: {
                         display: true,
-                        text: "Лінійна діаграма",
+                        text: "Кругова діаграма",
                     },
                 },
             },
@@ -577,6 +580,20 @@ export default {
         &:hover {
             color: #ffff;
             background-color: #12b65c;
+        }
+    }
+
+    .back_button {
+        margin: 20px auto;
+        // margin-right: 20px;
+        background-color: transparent;
+        color: #f05454;
+        border: solid 2px #f05454;
+        transition: all 0.3s ease-in-out;
+        border-radius: 10px;
+        &:hover {
+            color: #ffff;
+            background-color: #f05454;
         }
     }
 }

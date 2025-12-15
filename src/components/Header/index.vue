@@ -8,10 +8,7 @@
         </div>
         <div class="main_container">
             <div class="wrapp">
-                <div
-                    class="logo_container"
-                    @click="$router.push({ name: 'homePage' })"
-                >
+                <div class="logo_container" @click="menuItemClick('homePage')">
                     <img src="@/assets/images/logo.png" alt="" />
                 </div>
                 <div class="menu_container">
@@ -19,21 +16,18 @@
                         <div class="menu_item">
                             <p
                                 v-if="isAuthorized"
-                                @click="$router.push({ name: 'newReportPage' })"
+                                @click="menuItemClick('newReportPage')"
                             >
-                                Створити звіт
+                                Створити аналітичний звіт
                             </p>
-                            <p
-                                v-else
-                                @click="$router.push({ name: 'homePage' })"
-                            >
+                            <p v-else @click="menuItemClick('homePage')">
                                 Головна
                             </p>
                         </div>
                         <div class="menu_item">
                             <p
                                 v-if="isAuthorized"
-                                @click="$router.push({ name: 'myReportsPage' })"
+                                @click="menuItemClick('myReportsPage')"
                             >
                                 Мої звіти
                             </p>
@@ -44,14 +38,11 @@
                         <div class="menu_item">
                             <p
                                 v-if="isAuthorized"
-                                @click="$router.push({ name: 'settingsPage' })"
+                                @click="menuItemClick('settingsPage')"
                             >
                                 Налаштування
                             </p>
-                            <p
-                                v-else
-                                @click="$router.push({ name: 'partnersPage' })"
-                            >
+                            <p v-else @click="menuItemClick('partnersPage')">
                                 Партнери
                             </p>
                         </div>
@@ -98,6 +89,17 @@ export default {
         },
         loginUser() {
             this.$router.push({ name: "loginPage" });
+        },
+        menuItemClick(pageName) {
+            this.$store.dispatch("charts/fullReset");
+            if (
+                pageName === "newReportPage" &&
+                this.$route.name === "newReportPage"
+            ) {
+                window.location.reload();
+            } else {
+                this.$router.push({ name: pageName });
+            }
         },
     },
 };

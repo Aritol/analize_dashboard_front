@@ -98,72 +98,46 @@
                                     Застосувати
                                 </button>
                                 <button
+                                    class="back_button"
+                                    @click="backToChartTypeSelection"
+                                >
+                                    Повернутись
+                                </button>
+                                <!-- <button
                                     class="save_button"
                                     v-if="!$route.params.reportId"
                                     @click="saveReportPopup = true"
                                 >
                                     Зберегти звіт
-                                </button>
+                                </button> -->
                             </div>
                         </div>
                     </div>
                     <div class="right_column">
-                        <div class="tabs">
-                            <button
-                                :class="[
-                                    'tab',
-                                    { active: activeTab === 'vizualization' },
-                                ]"
-                                @click="activeTab = 'data'"
-                            >
-                                Дані
-                            </button>
-
-                            <button
-                                :class="[
-                                    'tab',
-                                    { active: activeTab === 'visualization' },
-                                ]"
-                                @click="activeTab = 'visualization'"
-                            >
-                                Візуалізація
-                            </button>
+                        <div class="header">
+                            {{ isNewReport ? "Створення графіку" : "Графік" }}
                         </div>
-                        <!-- <div v-if="activeTab === 'visualization'"> -->
-                        <div>
-                            <div class="header">
-                                {{
-                                    isNewReport ? "Створення графіку" : "Графік"
-                                }}
-                            </div>
-                            <div
-                                class="graphic_container"
-                                v-if="showExampleChart"
-                            >
-                                <canvas
-                                    id="myChartExample"
-                                    width="800"
-                                    height="600"
-                                ></canvas>
-                            </div>
-                            <div class="graphic_container" v-else>
-                                <line-chart
-                                    v-if="chartType === linearDiagramChartType"
-                                    :labels="labels"
-                                    :name="chartName"
-                                    :chartData="chartDataNormalized"
-                                />
-                                <gistogram-chart
-                                    v-else
-                                    :labels="labels"
-                                    :name="chartName"
-                                    :chartData="chartDataNormalized"
-                                />
-                            </div>
+                        <div class="graphic_container" v-if="showExampleChart">
+                            <canvas
+                                id="myChartExample"
+                                width="800"
+                                height="600"
+                            ></canvas>
                         </div>
-                        <!-- <div v-if="activeTab === 'data'">
-                            <div>data</div>
-                        </div> -->
+                        <div class="graphic_container" v-else>
+                            <line-chart
+                                v-if="chartType === linearDiagramChartType"
+                                :labels="labels"
+                                :name="chartName"
+                                :chartData="chartDataNormalized"
+                            />
+                            <gistogram-chart
+                                v-else
+                                :labels="labels"
+                                :name="chartName"
+                                :chartData="chartDataNormalized"
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -245,7 +219,6 @@ export default {
             showResponsePopup: false,
             userName: "",
             headerText: "",
-            activeTab: "data",
         };
     },
     watch: {
@@ -314,6 +287,9 @@ export default {
         },
     },
     methods: {
+        backToChartTypeSelection() {
+            this.$router.push({ name: "newReportPage" });
+        },
         initializeEntryKeys() {
             const keys = Object.keys(this.chartData);
             for (let i of keys) {
@@ -497,40 +473,39 @@ export default {
         if (!isEmpty(this.chartData)) {
             this.initializeEntryKeys();
         }
-        if (this.activeTab === "visualization") {
-            const ctx = document.getElementById("myChartExample");
-            new Chart(ctx, {
-                type: "line",
-                data: {
-                    labels: [
-                        "Понеділок",
-                        "Вівторок",
-                        "Середа",
-                        "Четвер",
-                        "П'ятниця",
-                        "Неділя",
-                    ],
-                    datasets: [
-                        {
-                            label: "Example",
-                            borderWidth: 1,
-                        },
-                    ],
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: "top",
-                        },
-                        title: {
-                            display: true,
-                            text: "Лінійна діаграма",
-                        },
+
+        const ctx = document.getElementById("myChartExample");
+        new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: [
+                    "Понеділок",
+                    "Вівторок",
+                    "Середа",
+                    "Четвер",
+                    "П'ятниця",
+                    "Неділя",
+                ],
+                datasets: [
+                    {
+                        label: "Example",
+                        borderWidth: 1,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: "top",
+                    },
+                    title: {
+                        display: true,
+                        text: "Лінійна діаграма",
                     },
                 },
-            });
-        }
+            },
+        });
 
         if (this.fileType === this.csvFileType) {
             this.entryKeySelected();
@@ -564,52 +539,7 @@ export default {
     justify-content: space-between;
     margin-bottom: 50px;
 }
-.tabs {
-    display: flex;
-    // align-items: flex-end;
-    // background: #d4d8dd;
-    // height: 48px;
-    // border-radius: 8px;
-    .tab {
-        font-size: 22px;
-        position: relative;
-        // height: 32px;
-        width: 100%;
-        padding: 10px 14px;
-        // margin-right: -15px;
 
-        background: #ececec;
-        border-radius: 20px 20px 0 0;
-        cursor: pointer;
-
-        // display: flex;
-        align-items: center;
-        z-index: 1;
-
-        // transition: all 0.15s ease-in-out;
-        // box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6),
-        //     inset 0 -1px 0 rgba(0, 0, 0, 0.1);
-
-        // padding: 20px 30px;
-        // font-size: 20px;
-        // background: #dde3e9;
-        // cursor: pointer;
-        transition: all 0.25s ease-in-out;
-        &:hover {
-            background: #c8cdd2;
-        }
-        button {
-        }
-    }
-    .active {
-        background: #ffffff;
-        list-style: underline;
-        font-weight: bold;
-        &:hover {
-            background: #ffffff;
-        }
-    }
-}
 .left_column {
     width: 100%;
     h1 {
@@ -682,6 +612,20 @@ export default {
         &:hover {
             color: #ffff;
             background-color: #166ba0;
+        }
+    }
+
+    .back_button {
+        margin: 20px auto;
+        // margin-right: 20px;
+        background-color: transparent;
+        color: #f05454;
+        border: solid 2px #f05454;
+        transition: all 0.3s ease-in-out;
+        border-radius: 10px;
+        &:hover {
+            color: #ffff;
+            background-color: #f05454;
         }
     }
 
